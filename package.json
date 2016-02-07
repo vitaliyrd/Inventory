@@ -1,0 +1,25 @@
+{
+  "name": "inventory-backend",
+  "description": "Tracks an inventory of supplies or items",
+  "version": "0.0.1",
+  "contributors": [
+    {
+      "name": "Andrey Radchishin",
+      "email": "andreyrd1@gmail.com"
+    },
+    {
+      "name": "Vitaliy Radchishin",
+      "email": "vitaliyrd@gmail.com"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vitaliyrd/inventory-backend"
+  },
+  "dependencies": {
+    "co": "4.6.0",
+    "config": "1.19.0",
+    "hapi": "13.0.0",
+    "promise-mysql": "1.3.1"
+  }
+}

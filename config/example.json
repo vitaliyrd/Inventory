@@ -1,0 +1,6 @@
+{
+  "connection": {
+    "host": "your.host",
+    "port": 8000
+  }
+}
