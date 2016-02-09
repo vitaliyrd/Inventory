@@ -1,3 +1,4 @@
+var _ = require('underscore')
 var co = require('co')
 var config = require('config')
 var hapi = require('hapi')
@@ -24,6 +25,68 @@ var wg = function (gen) {
   }
 }
 
+// Build a where query from an array of conditions
+var buildWhere = function (conditions) {
+  if (conditions.length == 0) {
+    return null
+  }
+  var where = ' WHERE '
+  _.each(conditions, function (cur, i, list) {
+    where += cur
+    if (i < list.length - 1) {
+      // Not on the last one yet, keep adding 'AND'
+      where += ' AND '
+    }
+  })
+  return where
+}
+
+// Converts a sql bit to boolean
+var convertBit = function (bit) {
+  var bool = null
+  if (bit) { bool = bit.data == 1 }
+  return bool
+}
+
+// Converts checkedIn, needsService, and lost bit columns to boolean
+var convertItems = function (items) {
+  var converted
+  console.log(items)
+
+  if (_.isArray(items)) {
+    converted = []
+    _.each(items, function (cur, i, list) {
+      converted.push(_.extend({}, cur, {
+        checkedIn: convertBit(cur.checkedIn),
+        needsService: convertBit(cur.needsService),
+        lost: convertBit(cur.lost)
+      }))
+    })
+  } else {
+    converted = _.extend({}, items, {
+      checkedIn: convertBit(cur.checkedIn),
+      needsService: convertBit(cur.needsService),
+      lost: convertBit(cur.lost)
+    })
+  }
+
+  return converted
+}
+
+
+// Get a list of available categories
+server.route({
+  method: 'GET',
+  path: '/categories',
+  handler: wg(function *(request, reply) {
+    var results = yield db.query(
+      'SELECT * FROM Category'
+    )
+
+    reply(results)
+  })
+})
+
 // Get a single item by its id
 server.route({
   method: 'GET',
@@ -35,7 +98,7 @@ server.route({
     )
 
     if (results.length > 0) {
-      reply(results)
+      reply(convertItems(results[0]))
     } else {
       reply({
         error: "not found"
@@ -44,14 +107,50 @@ server.route({
   })
 })
 
-// Get all items in a category, by category id
+// Get all items
 server.route({
   method: 'GET',
-  path: '/items/by-category-id/{categoryId}',
+  path: '/items',
+  handler: wg(function *(request, reply) {
+    var conditions = []
+    var params = []
+
+    if (request.query.categoryId) {
+      conditions.push('categoryId = ?')
+      params.push(request.query.categoryId)
+    }
+    if (request.query.locationId) {
+      conditions.push('locationId = ?')
+      params.push(request.query.locationId)
+    }
+    if (request.query.checkedIn) {
+      conditions.push('checkedIn = ?')
+      params.push(request.query.checkedIn)
+    }
+    if (request.query.needsService) {
+      conditions.push('needsService = ?')
+      params.push(request.query.needService)
+    }
+
+    // If buildWhere() returns null, it'll be an empty string
+    var where = buildWhere(conditions) || ''
+
+    var results = yield db.query(
+      'SELECT * FROM Item' + where,
+      params
+    )
+
+    reply(convertItems(results))
+  })
+})
+
+// Get all available locations
+server.route({
+  method: 'GET',
+  path: '/locations',
   handler: wg(function *(request, reply) {
     var results = yield db.query(
-      'SELECT * FROM Item WHERE categoryId = ?',
-      [request.params.categoryId]
+      'SELECT * FROM Location'
     )
 
     reply(results)
