@@ -48,26 +48,48 @@ var convertBit = function (bit) {
   return bool
 }
 
+// Loads location, category
 // Converts checkedIn, needsService, and lost bit columns to boolean
-var convertItems = function (items) {
+var populateItems = function *(items) {
   var converted
-  console.log(items)
 
   if (_.isArray(items)) {
     converted = []
-    _.each(items, function (cur, i, list) {
-      converted.push(_.extend({}, cur, {
+    for (var i = 0; i < items.length; i++) {
+      var cur = items[i]
+
+      var item = _.extend({}, cur, {
         checkedIn: convertBit(cur.checkedIn),
         needsService: convertBit(cur.needsService),
         lost: convertBit(cur.lost)
-      }))
-    })
+      })
+
+      item.category = (yield db.query(
+        'SELECT * FROM Category WHERE id = ?',
+        [item.categoryId]
+      ))[0]
+      item.location = (yield db.query(
+        'SELECT * FROM Location WHERE id = ?',
+        [item.locationId]
+      ))[0]
+
+      converted.push(item)
+    }
   } else {
     converted = _.extend({}, items, {
       checkedIn: convertBit(cur.checkedIn),
       needsService: convertBit(cur.needsService),
       lost: convertBit(cur.lost)
     })
+
+    converted.category = (yield db.query(
+      'SELECT * FROM Category WHERE id = ?',
+      [item.categoryId]
+    ))[0]
+    converted.location = (yield db.query(
+      'SELECT * FROM Location WHERE id = ?',
+      [item.locationId]
+    ))[0]
   }
 
   return converted
@@ -98,7 +120,8 @@ server.route({
     )
 
     if (results.length > 0) {
-      reply(convertItems(results[0]))
+      var items = yield populateItems(results)
+      reply(items[0])
     } else {
       reply({
         error: "not found"
@@ -140,7 +163,7 @@ server.route({
       params
     )
 
-    reply(convertItems(results))
+    reply(yield populateItems(results))
   })
 })
 
