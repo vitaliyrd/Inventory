@@ -2,5 +2,12 @@
   "connection": {
     "host": "your.host",
     "port": 8000
+  },
+  "db": {
+    "host": "your.mysql.host",
+    "socketPath": "/path/to/mysqld.sock",
+    "user": "mysqlusername",
+    "password": "mysqlpassword",
+    "database": "databasename"
   }
 }
