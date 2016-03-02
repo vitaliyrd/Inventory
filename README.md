@@ -22,7 +22,7 @@ npm start
 #### Entries
 The database is centered on Entries. These are the physical things in your inventory.
 - `GET /entries` `application/json`
-  ```
+```json
   [
     {
       "brand": "Ibanez",
@@ -75,12 +75,12 @@ The database is centered on Entries. These are the physical things in your inven
       "serialNo": "def"
     }
   ]
-  ```
+```
 - `GET /entries/by-category/{categoryId}` Filter entries to those in the specified category
 - `GET /entries/by-location/{locationId}` Filter entries to those in the specified location
 - `POST /entries` `application/json` Not implemented yet.
   Automatically detects if you are using an existing Item template. If you are, we simply use that itemId. If not, we create a new Item template from the data you gave.
-  ```
+```json
   {
     "brand": "Ibanez",
     "categoryId": 1,
@@ -93,7 +93,7 @@ The database is centered on Entries. These are the physical things in your inven
     "notes": "Blue color",
     "serialNo": "abc"
   }
-  ```
+```
 
 #### Items
 Items are templates that are common to multiple entries. For example, suppose there are 5 Fulltone OCDs in your inventory. Rather than duplicating that information 5 times, there is an item that the 5 OCD entries are linked to.
@@ -102,40 +102,40 @@ Items are templates that are common to multiple entries. For example, suppose th
 
 #### Categories
 - `GET /categories`
-```
-[
-  {
-    "id": 1,
-    "name": "Guitars",
-    "notes": "Guitars and their accessories"
-  },
-  {
-    "id": 2,
-    "name": "Microphones",
-    "notes": "Microphones and their cables\/accessories"
-  }
-]
+```json
+  [
+    {
+      "id": 1,
+      "name": "Guitars",
+      "notes": "Guitars and their accessories"
+    },
+    {
+      "id": 2,
+      "name": "Microphones",
+      "notes": "Microphones and their cables\/accessories"
+    }
+  ]
 ```
 
 #### Locations
 - `GET /locations`
-```
-[
-  {
-    "buildingNo": "Main Building",
-    "floorNo": "3",
-    "id": 1,
-    "name": "Drum Room",
-    "notes": "Off the side of the youth room stage",
-    "roomNo": null
-  },
-  {
-    "buildingNo": "Main Building",
-    "floorNo": "3",
-    "id": 2,
-    "name": "Youth Room",
-    "notes": null,
-    "roomNo": null
-  }
-]
+```json
+  [
+    {
+      "buildingNo": "Main Building",
+      "floorNo": "3",
+      "id": 1,
+      "name": "Drum Room",
+      "notes": "Off the side of the youth room stage",
+      "roomNo": null
+    },
+    {
+      "buildingNo": "Main Building",
+      "floorNo": "3",
+      "id": 2,
+      "name": "Youth Room",
+      "notes": null,
+      "roomNo": null
+    }
+  ]
 ```
