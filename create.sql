@@ -13,25 +13,24 @@ CREATE TABLE Categories (
   notes tinytext
 );
 
-CREATE TABLE ItemDescriptions (
+CREATE TABLE Items (
   id         int         auto_increment not null primary key,
   name       varchar(50)                not null,
   categoryId int,
   brand      varchar(50),
   model      varchar(20),
-  notes      tinytext,
   foreign key (categoryId) references Categories (id)
 );
 
-CREATE TABLE Items (
-  itemDescriptionId int         not null,
-  serialNo          varchar(30) not null,
-  locationId        int,
-  checkedIn         bool,
-  needsService      bool,
-  lost              bool,
-  notes             tinytext,
-  primary key (itemDescriptionId, serialNo),
-  foreign key (itemDescriptionId) references ItemDescriptions (id),
+CREATE TABLE Entries (
+  itemId       int         not null,
+  serialNo     varchar(30) not null,
+  locationId   int,
+  checkedIn    bool,
+  needsService bool,
+  lost         bool,
+  notes        tinytext,
+  primary key (itemId, serialNo),
+  foreign key (itemId) references Entries (id),
   foreign key (locationId) references Locations (id)
 );

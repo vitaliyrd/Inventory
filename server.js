@@ -25,76 +25,92 @@ var wg = function (gen) {
   }
 }
 
-// Build a where query from an array of conditions
-var buildWhere = function (conditions) {
-  if (conditions.length == 0) {
-    return null
+// Prepares returned database data for reply
+var prepareEntries = function *(data) {
+  var isArray = _.isArray(data)
+  if (!isArray) {
+    data = [data]
   }
-  var where = ' WHERE '
-  _.each(conditions, function (cur, i, list) {
-    where += cur
-    if (i < list.length - 1) {
-      // Not on the last one yet, keep adding 'AND'
-      where += ' AND '
-    }
+
+  for (var i = 0; i < data.length; i++) {
+    var entry = data[i]
+
+    convertBooleans(entry)
+
+    entry.location = yield getLocation(entry.locationId)
+    delete entry.locationId
+
+    entry.category = yield getCategory(entry.categoryId)
+    delete entry.categoryId
+  }
+
+  if (!isArray) {
+    data = data[0]
+  }
+  return data
+}
+
+// Converts status flags from integers to booleans
+var convertBooleans = function (entry) {
+  entry.checkedIn = entry.checkedIn == 1
+  entry.needsService = entry.needsService == 1
+  entry.lost = entry.lost == 1
+}
+
+var getLocation = function *(locationId) {
+  return (yield db.query(
+    'SELECT * FROM Locations WHERE id = ?',
+    [locationId]
+  ))[0]
+}
+
+var getCategory = function *(categoryId) {
+  return (yield db.query(
+    'SELECT * FROM Categories WHERE id = ?',
+    [categoryId]
+  ))[0]
+}
+
+// Get a list of entries in the inventory
+server.route({
+  method: 'GET',
+  path: '/entries',
+  handler: wg(function *(request, reply) {
+    var results = yield db.query(
+      'SELECT * FROM Entries INNER JOIN Items ON Entries.itemId = Items.id'
+    )
+
+    reply(yield prepareEntries(results))
   })
-  return where
-}
+})
 
-// Converts a sql bit to boolean
-var convertBit = function (bit) {
-  var bool = null
-  if (bit) { bool = bit.data == 1 }
-  return bool
-}
+// Get a list of entries in a certain category
+server.route({
+  method: 'GET',
+  path: '/entries/by-category/{categoryId}',
+  handler: wg(function *(request, reply) {
+    var results = yield db.query(
+      'SELECT * FROM Entries INNER JOIN Items ON Entries.itemId = Items.id WHERE categoryId = ?',
+      [request.params.categoryId]
+    )
 
-// Loads location, category
-// Converts checkedIn, needsService, and lost bit columns to boolean
-var populateItems = function *(items) {
-  var converted
+    reply(yield prepareEntries(results))
+  })
+})
 
-  if (_.isArray(items)) {
-    converted = []
-    for (var i = 0; i < items.length; i++) {
-      var cur = items[i]
+// Get a list of entries in a certain category
+server.route({
+  method: 'GET',
+  path: '/entries/by-location/{locationId}',
+  handler: wg(function *(request, reply) {
+    var results = yield db.query(
+      'SELECT * FROM Entries INNER JOIN Items ON Entries.itemId = Items.id WHERE locationId = ?',
+      [request.params.locationId]
+    )
 
-      var item = _.extend({}, cur, {
-        checkedIn: convertBit(cur.checkedIn),
-        needsService: convertBit(cur.needsService),
-        lost: convertBit(cur.lost)
-      })
-
-      item.category = (yield db.query(
-        'SELECT * FROM Category WHERE id = ?',
-        [item.categoryId]
-      ))[0]
-      item.location = (yield db.query(
-        'SELECT * FROM Location WHERE id = ?',
-        [item.locationId]
-      ))[0]
-
-      converted.push(item)
-    }
-  } else {
-    converted = _.extend({}, items, {
-      checkedIn: convertBit(cur.checkedIn),
-      needsService: convertBit(cur.needsService),
-      lost: convertBit(cur.lost)
-    })
-
-    converted.category = (yield db.query(
-      'SELECT * FROM Category WHERE id = ?',
-      [item.categoryId]
-    ))[0]
-    converted.location = (yield db.query(
-      'SELECT * FROM Location WHERE id = ?',
-      [item.locationId]
-    ))[0]
-  }
-
-  return converted
-}
-
+    reply(yield prepareEntries(results))
+  })
+})
 
 // Get a list of available categories
 server.route({
@@ -102,68 +118,10 @@ server.route({
   path: '/categories',
   handler: wg(function *(request, reply) {
     var results = yield db.query(
-      'SELECT * FROM Category'
+      'SELECT * FROM Categories'
     )
 
     reply(results)
-  })
-})
-
-// Get a single item by its id
-server.route({
-  method: 'GET',
-  path: '/item/{id}',
-  handler: wg(function *(request, reply) {
-    var results = yield db.query(
-      'SELECT * FROM Item WHERE id = ?',
-      [request.params.id]
-    )
-
-    if (results.length > 0) {
-      var items = yield populateItems(results)
-      reply(items[0])
-    } else {
-      reply({
-        error: "not found"
-      }).code(404)
-    }
-  })
-})
-
-// Get all items
-server.route({
-  method: 'GET',
-  path: '/items',
-  handler: wg(function *(request, reply) {
-    var conditions = []
-    var params = []
-
-    if (request.query.categoryId) {
-      conditions.push('categoryId = ?')
-      params.push(request.query.categoryId)
-    }
-    if (request.query.locationId) {
-      conditions.push('locationId = ?')
-      params.push(request.query.locationId)
-    }
-    if (request.query.checkedIn) {
-      conditions.push('checkedIn = ?')
-      params.push(request.query.checkedIn)
-    }
-    if (request.query.needsService) {
-      conditions.push('needsService = ?')
-      params.push(request.query.needService)
-    }
-
-    // If buildWhere() returns null, it'll be an empty string
-    var where = buildWhere(conditions) || ''
-
-    var results = yield db.query(
-      'SELECT * FROM Item' + where,
-      params
-    )
-
-    reply(yield populateItems(results))
   })
 })
 
@@ -173,7 +131,7 @@ server.route({
   path: '/locations',
   handler: wg(function *(request, reply) {
     var results = yield db.query(
-      'SELECT * FROM Location'
+      'SELECT * FROM Locations'
     )
 
     reply(results)
