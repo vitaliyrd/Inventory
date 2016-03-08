@@ -84,6 +84,62 @@ server.route({
   })
 })
 
+// Create a new inventory entry
+server.route({
+  method: 'POST',
+  path: '/entries',
+  handler: wg(function *(request, reply) {
+    var entry = request.payload
+
+    var item = (yield db.query(
+      'SELECT * FROM Items WHERE categoryId = ? AND brand = ? AND model = ?',
+      [entry.categoryId, entry.brand, entry.model]
+    ))[0]
+
+    if (!item) {
+      var item = yield db.query(
+        'INSERT INTO Items VALUES (NULL, ?, ?, ?)',
+        [entry.categoryId, entry.brand, entry.model]
+      )
+
+      entry.itemId = item.insertId
+    } else {
+      entry.itemId = item.id
+    }
+
+    entry = {
+      itemId: entry.itemId,
+      serialNo: entry.serialNo,
+      name: entry.name,
+      locationId: entry.locationId,
+      checkedIn: entry.checkedIn,
+      needsService: entry.needsService,
+      lost: entry.lost,
+      notes: entry.notes
+    }
+
+    entryArray = [
+      entry.itemId,
+      entry.serialNo,
+      entry.name,
+      entry.locationId,
+      entry.checkedIn,
+      entry.needsService,
+      entry.lost,
+      entry.notes
+    ]
+
+    console.log(entryArray)
+
+    yield db.query(
+      'INSERT INTO Entries VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      entryArray
+    )
+
+    reply(entry)
+  })
+})
+
 // Get a list of entries in a certain category
 server.route({
   method: 'GET',
@@ -109,6 +165,19 @@ server.route({
     )
 
     reply(yield prepareEntries(results))
+  })
+})
+
+// Get a list of available Items
+server.route({
+  method: 'GET',
+  path: '/items',
+  handler: wg(function *(request, reply) {
+    var results = yield db.query(
+      'SELECT * FROM Items'
+    )
+
+    reply(results)
   })
 })
 
