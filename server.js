@@ -140,6 +140,24 @@ server.route({
   })
 })
 
+server.route({
+  method: 'DELETE',
+  path: '/entries/{itemId}/{serialNo}',
+  handler: wg(function *(request, reply) {
+    var result = (yield db.query(
+      'SELECT * FROM Entries WHERE itemId = ? AND serialNo = ?',
+      [request.params.itemId, request.params.serialNo]
+    ))[0]
+
+    yield db.query(
+      'DELETE FROM Entries WHERE itemId = ? AND serialNo = ?',
+      [request.params.itemId, request.params.serialNo]
+    )
+
+    reply(result)
+  })
+})
+
 // Get a list of entries in a certain category
 server.route({
   method: 'GET',
