@@ -94,6 +94,7 @@ The database is centered on Entries. These are the physical things in your inven
     "serialNo": "abc"
   }
 ```
+- `DELETE /entries/{itemId}/{serialNo}` Delete an entry.
 
 #### Items
 Items are templates that are common to multiple entries. For example, suppose there are 5 Fulltone OCDs in your inventory. Rather than duplicating that information 5 times, there is an item that the 5 OCD entries are linked to.
