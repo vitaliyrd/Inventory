@@ -83,9 +83,13 @@ The database is centered on Entries. These are the physical things in your inven
 ```json
   {
     "brand": "Ibanez",
-    "categoryId": 1,
+    "category": {
+      "id": 1
+    },
     "checkedIn": true,
-    "locationId": 1,
+    "location": {
+      "id": 1
+    },
     "lost": false,
     "model": "RG",
     "name": "Andrey's Guitar",
