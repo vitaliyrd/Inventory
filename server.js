@@ -93,13 +93,13 @@ server.route({
 
     var item = (yield db.query(
       'SELECT * FROM Items WHERE categoryId = ? AND brand = ? AND model = ?',
-      [entry.categoryId, entry.brand, entry.model]
+      [entry.category.id, entry.brand, entry.model]
     ))[0]
 
     if (!item) {
       var item = yield db.query(
         'INSERT INTO Items VALUES (NULL, ?, ?, ?)',
-        [entry.categoryId, entry.brand, entry.model]
+        [entry.category.id, entry.brand, entry.model]
       )
 
       entry.itemId = item.insertId
@@ -111,7 +111,7 @@ server.route({
       itemId: entry.itemId,
       serialNo: entry.serialNo,
       name: entry.name,
-      locationId: entry.locationId,
+      locationId: entry.location.id,
       checkedIn: entry.checkedIn,
       needsService: entry.needsService,
       lost: entry.lost,
@@ -122,14 +122,12 @@ server.route({
       entry.itemId,
       entry.serialNo,
       entry.name,
-      entry.locationId,
+      entry.location.id,
       entry.checkedIn,
       entry.needsService,
       entry.lost,
       entry.notes
     ]
-
-    console.log(entryArray)
 
     yield db.query(
       'INSERT INTO Entries VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
