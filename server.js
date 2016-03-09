@@ -122,7 +122,7 @@ server.route({
       entry.itemId,
       entry.serialNo,
       entry.name,
-      entry.location.id,
+      entry.locationId,
       entry.checkedIn,
       entry.needsService,
       entry.lost,
