@@ -22,6 +22,7 @@ var wg = function (gen) {
   var handler = co.wrap(gen)
   return function (request, reply) {
     handler.bind(this)(request, reply)
+      .catch(reply)
   }
 }
 
