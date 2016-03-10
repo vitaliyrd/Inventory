@@ -158,21 +158,46 @@ server.route({
       notes: entry.notes
     }
 
-    entryArray = [
-      entry.itemId,
-      entry.serialNo,
-      entry.name,
-      entry.locationId,
-      entry.checkedIn,
-      entry.needsService,
-      entry.lost,
-      entry.notes
-    ]
+    var existing = (yield db.query(
+      'SELECT * FROM Entries WHERE itemId = ? AND serialNo = ?',
+      [entry.itemId, entry.serialNo]
+    ))[0]
 
-    yield db.query(
-      'INSERT INTO Entries VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      entryArray
-    )
+    if (existing) {
+      var entryArray = [
+        entry.name,
+        entry.locationId,
+        entry.checkedIn,
+        entry.needsService,
+        entry.lost,
+        entry.notes,
+        entry.itemId,
+        entry.serialNo,
+      ]
+
+      yield db.query(
+        'UPDATE Entries SET name = ?, locationId = ?, checkedIn = ?, ' +
+          'needsService = ?, lost = ?, notes = ? WHERE itemId = ? AND ' +
+          'serialNo = ?',
+        entryArray
+      )
+    } else {
+      var entryArray = [
+        entry.itemId,
+        entry.serialNo,
+        entry.name,
+        entry.locationId,
+        entry.checkedIn,
+        entry.needsService,
+        entry.lost,
+        entry.notes
+      ]
+
+      yield db.query(
+        'INSERT INTO Entries VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        entryArray
+      )
+    }
 
     reply(entry)
   })
