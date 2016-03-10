@@ -79,7 +79,7 @@ The database is centered on Entries. These are the physical things in your inven
 - `GET /entries/by-category/{categoryId}` Filter entries to those in the specified category
 - `GET /entries/by-location/{locationId}` Filter entries to those in the specified location
 - `POST /entries` `application/json` Not implemented yet.
-  Automatically detects if you are using an existing Item template. If you are, we simply use that itemId. If not, we create a new Item template from the data you gave. Will also create category and location if you do not specify an id for them.
+  Automatically detects if you are using an existing Item template. If you are, we simply use that itemId. If not, we create a new Item template from the data you gave. Will also create category and location if you do not specify an id for them. If your item's itemId and serialNo already exist, it will update that entry instead of creating a new one.
 ```json
   {
     "brand": "Ibanez",
