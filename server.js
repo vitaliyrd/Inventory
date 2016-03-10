@@ -85,6 +85,21 @@ server.route({
   })
 })
 
+// Get a single entry by itemId and serialNo
+server.route({
+  method: 'GET',
+  path: '/entries/{itemId}/{serialNo}',
+  handler: wg(function *(request, reply) {
+    var results = yield db.query(
+      'SELECT * FROM Entries INNER JOIN Items ON Entries.itemId = Items.id ' +
+        'WHERE Entries.itemId = ? AND Entries.serialNo = ?',
+      [request.params.itemId, request.params.serialNo]
+    )
+
+    reply(yield prepareEntries(results[0]))
+  })
+})
+
 // Create a new inventory entry
 server.route({
   method: 'POST',
