@@ -92,6 +92,30 @@ server.route({
   handler: wg(function *(request, reply) {
     var entry = request.payload
 
+    if (!entry.category.id) {
+      var category = yield db.query(
+        'INSERT INTO Categories VALUES (NULL, ?, ?)',
+        [entry.category.name, entry.category.notes]
+      )
+
+      entry.category.id = category.insertId
+    }
+
+    if (!entry.location.id) {
+      var location = yield db.query(
+        'INSERT INTO Locations VALUES (NULL, ?, ?, ?, ?, ?)',
+        [
+          entry.location.name,
+          entry.location.buildingNo,
+          entry.location.floorNo,
+          entry.location.roomNo,
+          entry.location.notes
+        ]
+      )
+
+      entry.location.id = location.insertId
+    }
+
     var item = (yield db.query(
       'SELECT * FROM Items WHERE categoryId = ? AND brand = ? AND model = ?',
       [entry.category.id, entry.brand, entry.model]
